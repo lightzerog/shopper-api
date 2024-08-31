@@ -1,0 +1,36 @@
+version: '3.5'
+
+services:
+  mysqldb:
+    container_name: mysql_shopper
+    image: mysql:5.7
+    restart: unless-stopped
+
+    environment:
+      - MYSQL_ROOT_PASSWORD=admin
+      - MYSQL_DATABASE=shopper
+      - MYSQL_PASSWORD=admin
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-padmin" ]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+
+  api:
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+    container_name: api_shopper
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+      - 9229:9229
+
+volumes:
+  db_data:
